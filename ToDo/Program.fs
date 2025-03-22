@@ -270,6 +270,7 @@ type App() =
         | :? IClassicDesktopStyleApplicationLifetime as desktopLifetime ->
             desktopLifetime.MainWindow <- MainWindow()
         | _ -> ()
+        base.OnFrameworkInitializationCompleted()
 
 module Program =
 
