@@ -1,59 +1,67 @@
-name: Build and Upload ZIP
+name: Avalonia Windows Build & Release
 
 on:
   push:
     branches:
-      - master  # Vagy main, ha azt használod
+      - master
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: write  # Engedélyezi a release létrehozását
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-      # Checkout repository
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # Setup .NET environment
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '8.0.x'  # Állítsd be a megfelelő .NET verziót
 
-      # Restore dependencies
-      - name: Restore dependencies
+      - name: Restore NuGet packages
         run: dotnet restore
 
-      # Build and publish the application
-      - name: Build and Publish
+      - name: Build Avalonia project
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Publish Avalonia App (Create Executable)
         run: dotnet publish -c Release -r win-x64 --self-contained true -o output
 
-      # Create release directory if it doesn't exist
-      - name: Create release directory
-        run: |
-          if (-not (Test-Path -Path "./release")) {
-            New-Item -ItemType Directory -Force -Path "./release"
-          }
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Avalonia-Windows-Build
+          path: output/
 
-      # Create a ZIP file containing the published app (exe + dlls)
-      - name: Create ZIP file
-        run: |
-          Compress-Archive -Path output/* -DestinationPath ./release/ToDoApp.zip
+  release:
+    needs: build
+    runs-on: windows-latest
 
-      # Create a new version tag based on the commit hash
-      - name: Create new version tag
-        id: create_tag
-        run: |
-          VERSION=$(git rev-parse --short HEAD)
-          echo "VERSION=$VERSION"
-          git tag "v$VERSION"
-          git push origin "v$VERSION"
+    steps:
+      - name: Download built artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: Avalonia-Windows-Build
+          path: build-output
 
-      # Upload the ZIP file to GitHub Release
-      - name: Upload ZIP to GitHub Release
+      - name: Create ZIP file with build artifacts
+        run: |
+          # Csomagoljuk az output mappát ZIP fájlba
+          Compress-Archive -Path build-output/* -DestinationPath build-output/ToDoApp.zip
+
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: release/ToDoApp.zip
-          tag_name: v${{ steps.create_tag.outputs.VERSION }}
+          tag_name: v1.0.${{ github.run_number }}
+          name: "Release v1.0.${{ github.run_number }}"
+          files: build-output/ToDoApp.zip  # ZIP fájl feltöltése
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
