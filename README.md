@@ -3,4 +3,4 @@
 This is my awesome web application! 🚀
 
 ## Try it live
-👉 [Live Demo](https://<felhasználónév>.github.io/my-app/)
+👉 [Live Demo](https://szekelylevente.github.io/todo/)
