@@ -1,12 +1,15 @@
-name: Avalonia Windows Build
+name: Avalonia Windows Build & Release
 
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
+
+permissions:
+  contents: write  # Engedélyezi a release létrehozását
 
 jobs:
   build:
@@ -19,7 +22,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'  # Vagy az Avalonia projekthez használt verzió
+          dotnet-version: '8.0.x'  # Állítsd be a megfelelő .NET verziót
 
       - name: Restore NuGet packages
         run: dotnet restore
@@ -27,7 +30,7 @@ jobs:
       - name: Build Avalonia project
         run: dotnet build --configuration Release --no-restore
 
-      - name: Publish Avalonia App
+      - name: Publish Avalonia App (Create Executable)
         run: dotnet publish -c Release -r win-x64 --self-contained true -o output
 
       - name: Upload build artifacts
@@ -35,10 +38,11 @@ jobs:
         with:
           name: Avalonia-Windows-Build
           path: output/
-          
+
   release:
     needs: build
     runs-on: windows-latest
+
     steps:
       - name: Download built artifacts
         uses: actions/download-artifact@v4
