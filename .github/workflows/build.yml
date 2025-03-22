@@ -1,62 +1,42 @@
-name: Avalonia Windows Build & Release
+name: Build and Upload ZIP
 
 on:
   push:
     branches:
-      - master
-  pull_request:
-    branches:
-      - master
-
-permissions:
-  contents: write  # Engedélyezi a release létrehozását
+      - master  # Vagy main, ha azt használod
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
+      # Checkout repository
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
+      # Setup .NET environment
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'  # Állítsd be a megfelelő .NET verziót
+          dotnet-version: '8.0.x'
 
-      - name: Restore NuGet packages
+      # Restore dependencies
+      - name: Restore dependencies
         run: dotnet restore
 
-      - name: Build Avalonia project
-        run: dotnet build --configuration Release --no-restore
-
-      - name: Publish Avalonia App (Create Executable)
+      # Build and publish the application
+      - name: Build and Publish
         run: dotnet publish -c Release -r win-x64 --self-contained true -o output
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: Avalonia-Windows-Build
-          path: output/
+      # Create a ZIP file containing the published app (exe + dlls)
+      - name: Create ZIP file
+        run: |
+          Compress-Archive -Path output/* -DestinationPath ./release/ToDoApp.zip
 
-  release:
-    needs: build
-    runs-on: windows-latest
-
-    steps:
-      - name: Download built artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: Avalonia-Windows-Build
-          path: build-output
-
-      - name: Create GitHub Release
+      # Upload the ZIP file to GitHub Release
+      - name: Upload ZIP to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: "Release v1.0.${{ github.run_number }}"
-          files: build-output/**/*.exe
-          draft: false
-          prerelease: false
+          files: release/ToDoApp.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
