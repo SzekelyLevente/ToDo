@@ -1,37 +1,37 @@
-name: Windows Build and Release
+name: Avalonia Windows Build
 
 on:
   push:
     branches:
-      - master  # Akkor fut le, ha a main branch-be pusholsz
+      - main
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
   build:
-    runs-on: windows-latest  # Windows futtatókörnyezet
+    runs-on: windows-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up MSBuild
-        uses: microsoft/setup-msbuild@v1
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
         with:
-          vs-version: '[17,18)'  # Visual Studio 2022 kompatibilitás
+          dotnet-version: '8.0.x'  # Vagy az Avalonia projekthez használt verzió
 
-      - name: Restore dependencies
-        run: |
-          nuget restore ToDo.sln  # Ha C#/.NET projektről van szó
+      - name: Restore NuGet packages
+        run: dotnet restore
 
-      - name: Build the project
-        run: |
-          msbuild ToDo.sln /p:Configuration=Release
+      - name: Build Avalonia project
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Publish Avalonia App
+        run: dotnet publish -c Release -r win-x64 --self-contained true -o output
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Windows-Build
-          path: |
-            **/bin/Release/**  # A buildelt fájlok elérési útvonala
+          name: Avalonia-Windows-Build
+          path: output/
