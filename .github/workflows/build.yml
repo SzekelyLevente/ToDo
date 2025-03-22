@@ -28,6 +28,13 @@ jobs:
       - name: Build and Publish
         run: dotnet publish -c Release -r win-x64 --self-contained true -o output
 
+      # Create release directory if it doesn't exist
+      - name: Create release directory
+        run: |
+          if (-not (Test-Path -Path "./release")) {
+            New-Item -ItemType Directory -Force -Path "./release"
+          }
+
       # Create a ZIP file containing the published app (exe + dlls)
       - name: Create ZIP file
         run: |
