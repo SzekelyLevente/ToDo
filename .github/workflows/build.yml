@@ -1,0 +1,62 @@
+name: Avalonia Windows Build & Release
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write  # Engedélyezi a release létrehozását
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'  # Állítsd be a megfelelő .NET verziót
+
+      - name: Restore NuGet packages
+        run: dotnet restore
+
+      - name: Build Avalonia project
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Publish Avalonia App (Create Executable)
+        run: dotnet publish -c Release -r win-x64 --self-contained true -o output
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Avalonia-Windows-Build
+          path: output/
+
+  release:
+    needs: build
+    runs-on: windows-latest
+
+    steps:
+      - name: Download built artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: Avalonia-Windows-Build
+          path: build-output
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: "Release v1.0.${{ github.run_number }}"
+          files: build-output/**/*.exe
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
