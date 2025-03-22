@@ -40,10 +40,20 @@ jobs:
         run: |
           Compress-Archive -Path output/* -DestinationPath ./release/ToDoApp.zip
 
+      # Create a new version tag based on the commit hash
+      - name: Create new version tag
+        id: create_tag
+        run: |
+          VERSION=$(git rev-parse --short HEAD)
+          echo "VERSION=$VERSION"
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
+
       # Upload the ZIP file to GitHub Release
       - name: Upload ZIP to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           files: release/ToDoApp.zip
+          tag_name: v${{ steps.create_tag.outputs.VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
