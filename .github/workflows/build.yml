@@ -31,13 +31,18 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Publish Avalonia App (Create Executable)
-        run: dotnet publish -c Release -r win-x64 --self-contained true -o output
+        run: dotnet publish -c Release -r win-x64 --no self-contained true -o output
 
-      - name: Upload build artifacts
+      - name: Create ZIP archive
+        run: |
+          mkdir release
+          Compress-Archive -Path output\* -DestinationPath release\AvaloniaApp.zip
+
+      - name: Upload ZIP artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Avalonia-Windows-Build
-          path: output/
+          name: AvaloniaApp-ZIP
+          path: release/AvaloniaApp.zip
 
   release:
     needs: build
@@ -47,20 +52,15 @@ jobs:
       - name: Download built artifacts
         uses: actions/download-artifact@v4
         with:
-          name: Avalonia-Windows-Build
-          path: build-output
-
-      - name: Create ZIP file with build artifacts
-        run: |
-          # Csomagoljuk az output mappát ZIP fájlba
-          Compress-Archive -Path build-output/* -DestinationPath build-output/ToDoApp.zip
+          name: AvaloniaApp-ZIP
+          path: release
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v1.0.${{ github.run_number }}
           name: "Release v1.0.${{ github.run_number }}"
-          files: build-output/ToDoApp.zip  # ZIP fájl feltöltése
+          files: release/AvaloniaApp.zip
           draft: false
           prerelease: false
         env:
