@@ -30,6 +30,12 @@ jobs:
       - name: Build Avalonia project
         run: dotnet build --configuration Release --no-restore
 
+      - name: Clean project
+        run: dotnet clean --configuration Release
+      
+      - name: Rebuild project
+        run: dotnet build --configuration Release --no-incremental
+
       - name: Publish Avalonia App (Create Executable)
         run: dotnet publish -c Release -r win-x64 --self-contained false -o output
 
