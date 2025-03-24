@@ -27,9 +27,6 @@ jobs:
       - name: Restore NuGet packages
         run: dotnet restore
 
-      - name: Build Avalonia project
-        run: dotnet build --configuration Release --no-restore
-
       - name: Clean project
         run: dotnet clean --configuration Release
       
