@@ -34,7 +34,7 @@ jobs:
         run: dotnet build --configuration Release --no-incremental
 
       - name: Publish Avalonia App (Create Executable)
-        run: dotnet publish -c Release -r win-x64 --self-contained false -o output
+        run: dotnet publish -c Debug -r win-x64 --self-contained false -o output
 
       - name: Create ZIP archive
         run: |
